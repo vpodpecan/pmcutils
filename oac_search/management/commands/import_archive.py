@@ -58,7 +58,7 @@ class Command(BaseCommand):
             errors = {'file': [], 'content': []}
             startTime = time.time()
             for i, tarinfo in enumerate(tar):
-                # if i >= 500:
+                # if i >= 50:
                 #     break
                 if tarinfo.isreg():
                     # print(tarinfo.name)
