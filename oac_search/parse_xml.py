@@ -9,5 +9,5 @@ def extract_text(xmldata, skipTags=['xref', 'table', 'graphic', 'ext-link',
         _ = [x.extract() for x in root.find_all(tag)]
         # unwanted = root.find_all(tag)
         # unwanted.extract()
-    text = root.get_text(separator=u' ').strip().replace('  ', ' ').replace('  ', ' ')
+    text = root.get_text(separator=u' ').strip().replace('\n', ' ').replace('\t', ' ').replace('  ', ' ').replace('  ', ' ')
     return text
