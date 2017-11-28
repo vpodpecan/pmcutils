@@ -1,0 +1,9 @@
+filter free fulltext, to je vec kot open access
+
+uvoz:
+manuscripts
+ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/manuscript/
+
+oac:
+ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_bulk/
+
