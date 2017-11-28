@@ -16,6 +16,7 @@ class Article(models.Model):
     path = models.CharField(max_length=200, verbose_name='file path')
     xml = models.TextField(blank=True, verbose_name='XML content')
     text = models.TextField(blank=True, verbose_name='full text')
+    cleantext = models.TextField(blank=True, verbose_name='text without figures, tables, etc.')
     archive = models.ForeignKey(Archive, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):

@@ -65,7 +65,7 @@ class Command(BaseCommand):
                     fp = tar.extractfile(tarinfo)
                     ext = splitext(split(tarinfo.name)[1])[1].lower()
                     if ext not in ['.xml', '.nxml']:
-                        print('Unknown file type: {}-'.format(tarinfo.name))
+                        errors['file'].append(tarinfo.name)
                         continue
                     else:
                         xmldata = fp.read()
@@ -87,10 +87,12 @@ class Command(BaseCommand):
                     if extractText:
                         try:
                             new.text = parser.extract_text(xmldata, skipTags=[])
+                            new.cleantext = parser.extract_text(xmldata)
                         except:
                             errors['content'].append(tarinfo.name)
                     else:
                         new.text = ''
+                        new.cleantext = ''
                     new.save()
                     processed += 1
                     if (i+1) % 100 == 0:
