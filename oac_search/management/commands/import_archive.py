@@ -58,8 +58,8 @@ class Command(BaseCommand):
             errors = {'file': [], 'content': []}
             startTime = time.time()
             for i, tarinfo in enumerate(tar):
-                if i >= 500:
-                    break
+                # if i >= 500:
+                #     break
                 if tarinfo.isreg():
                     # print(tarinfo.name)
                     fp = tar.extractfile(tarinfo)
