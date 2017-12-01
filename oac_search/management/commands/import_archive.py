@@ -7,8 +7,7 @@ import pytz
 import time
 from django.core.management.base import BaseCommand
 
-from oac_search import models, parse_xml as parser
-from oac_search.parse_xml import extract_text
+from oac_search import models, parse_xml
 
 
 def get_creation_date(fpath):
@@ -86,8 +85,8 @@ class Command(BaseCommand):
                     new.xml = xmldata
                     if extractText:
                         try:
-                            new.text = parser.extract_text(xmldata, skipTags=[])
-                            new.cleantext = parser.extract_text(xmldata)
+                            new.text = parse_xml.extract_text(xmldata, skipTags=[])
+                            new.cleantext = parse_xml.extract_text(xmldata)
                         except:
                             errors['content'].append(tarinfo.name)
                     else:
