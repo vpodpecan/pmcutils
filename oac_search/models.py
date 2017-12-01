@@ -12,7 +12,7 @@ class Archive(models.Model):
 
 
 class Article(models.Model):
-    pmcid = models.CharField(max_length=20, unique=True, verbose_name='Pubmed Central ID')
+    pmcid = models.CharField(max_length=20, unique=True, db_index=True, verbose_name='Pubmed Central ID')
     path = models.CharField(max_length=200, verbose_name='file path')
     xml = models.TextField(blank=True, verbose_name='XML content')
     text = models.TextField(blank=True, verbose_name='full text')
