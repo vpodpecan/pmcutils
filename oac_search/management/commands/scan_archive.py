@@ -51,6 +51,6 @@ class Command(BaseCommand):
 
                     pmcid = splitext(split(tarinfo.name)[1])[0]
                     if not pmcid.startswith('PMC') or len(pmcid) > 20:
-                        print('archive "{}": invalid PMCID: "{}"'.format(archName, pmcid))
+                        print('archive "{}": invalid PMCID: "{}"'.format(archName, tarinfo.name))
                 if (i+1) % 10000 == 0:
                     print('---> {} files processed'.format(i+1))
