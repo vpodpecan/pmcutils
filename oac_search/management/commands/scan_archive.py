@@ -1,6 +1,6 @@
 import tarfile
 import datetime
-from os.path import split, splitext, getctime
+from os.path import split, splitext, getctime, join
 from os import stat
 import platform
 import pytz
@@ -36,6 +36,7 @@ class Command(BaseCommand):
             self.check_names(ifpath)
 
     def check_names(self, archName):
+        # onetime = True
         with tarfile.open(archName, 'r:gz') as tar:
             # processed = 0
             # errors = {'file': [], 'content': []}
@@ -52,5 +53,11 @@ class Command(BaseCommand):
                     pmcid = splitext(split(tarinfo.name)[1])[0]
                     if not pmcid.startswith('PMC') or len(pmcid) > 20:
                         print('archive "{}": invalid PMCID: "{}"'.format(archName, tarinfo.name))
+                        # if onetime:
+                        #     fp = tar.extractfile(tarinfo)
+                        #     with open(join('/home/vid/programiranje/wingIDE_projects/pmcutils/', split(tarinfo.name)[1]), 'wb') as ofp:
+                        #         ofp.write(fp.read())
+                        #     onetime = False
+
                 if (i+1) % 10000 == 0:
                     print('---> {} files processed'.format(i+1))

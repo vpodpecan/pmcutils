@@ -69,10 +69,11 @@ class Command(BaseCommand):
                     else:
                         xmldata = fp.read()
 
+                    # PMC is either the filename or it can be found inside xml
                     try:
                         pmcid = splitext(split(tarinfo.name)[1])[0]
                         if not pmcid.startswith('PMC'):
-                            raise Exception
+                            pmcid = parse_xml.find_pmcid(xmldata)
                     except:
                         errors['file'].append(tarinfo.name)
 

@@ -11,3 +11,15 @@ def extract_text(xmldata, skipTags=['xref', 'table', 'graphic', 'ext-link',
         # unwanted.extract()
     text = root.get_text(separator=u' ').strip().replace('\n', ' ').replace('\t', ' ').replace('  ', ' ').replace('  ', ' ')
     return text
+
+
+def find_pmcid(xmldata):
+    root = bs(xmldata, 'xml')
+    aid = root.find('article-id', attrs={'pub-id-type': 'pmc'})
+    if aid is not None:
+        pmcid = aid.text.strip()
+        if not pmcid.startswith('PMC'):
+            pmcid = 'PMC' + pmcid
+        return pmcid
+    else:
+        raise Exception('PMCID not found')
