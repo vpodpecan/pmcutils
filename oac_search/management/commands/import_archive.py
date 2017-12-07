@@ -80,6 +80,8 @@ class Command(BaseCommand):
                     (new, created) = models.Article.objects.get_or_create(pmcid=pmcid)
                     if not created and not overwrite:
                         skipped += 1
+                        if (i+1) % 100 == 0:
+                            print('{} articles processed'.format(i+1))
                         continue
                     new.path = tarinfo.name
                     new.archive = arch
