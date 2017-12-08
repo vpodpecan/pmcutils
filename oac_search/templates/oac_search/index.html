@@ -1,0 +1,66 @@
+{% load static %}
+{% load bootstrap3 %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>PMC search and export</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    {% bootstrap_css %}
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    {% bootstrap_javascript %}
+
+    <script src="{% static 'oac_search/js/spin.js' %}" type="module"></script>
+    <script src="{% static 'oac_search/js/main.js' %}"></script>
+
+    <style>
+        .btm-buffer {
+            margin-bottom: 50px;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+    </style>
+
+    <script>
+    </script>
+
+  </head>
+  <body>
+
+
+    <div class="container">
+
+        <div class="row btm-buffer">
+            <div class="col-md-6 col-md-offset-3">
+                <h1>Search & export PMC articles</h1>
+            </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 col-md-offset-3">
+
+              {# Display django.contrib.messages as Bootstrap alerts #}
+              {% bootstrap_messages %}
+
+              <form action="#" method="post" class="form">
+                {% csrf_token %}
+                {% bootstrap_form form %}
+                {% buttons %}
+                {# <button type="submit" class="btn btn-primary">#}
+                <button id="searchbutton" type="submit" class="btn btn-primary">
+                    {% bootstrap_icon "search" %} search
+                </button>
+                {% endbuttons %}
+              </form>
+
+
+          </div>
+        </div>
+    </div>
+  </body>
+</html>
