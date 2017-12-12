@@ -67,7 +67,11 @@ class Command(BaseCommand):
                         errors['file'].append(tarinfo.name)
                         continue
                     else:
-                        xmldata = fp.read()
+                        try:
+                            xmldata = fp.read().decode('utf-8')
+                        except Exception as e:
+                            errors['content'].append(tarinfo.name)
+                            print(e)
 
                     # PMC is either the filename or it can be found inside xml
                     try:
