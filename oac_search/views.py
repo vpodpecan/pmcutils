@@ -45,19 +45,15 @@ def _get_article_text(xmltags, article):
     for tag in ignoretags:
         _ = [x.extract() for x in root.find_all(tag)]
 
+    textblocks = []
     for t in tags:
-        parts = [x.get_text(separator=u' ') for x in root.find_all(t)]
-
-    parts = [x.get_text(separator=u' ') for x in root.find_all()]
-
-    text = root.get_text(separator=u' ').strip().replace('\n', ' ').replace('\t', ' ').replace('  ', ' ').replace('  ', ' ')
-    return text
+        data = [x.get_text(separator=u' ') for x in root.find_all(t)]
+        print(data)
+        textblocks.extend(data)
 
 
-
-
-
-    return article.pmcid, unidecode.unidecode(article.cleantext)
+    text = ' '.join(textblocks).strip().replace('\n', ' ').replace('\t', ' ').replace('  ', ' ').replace('  ', ' ')
+    return article.pmcid, unidecode.unidecode(text)
 
 
 def api(request):
@@ -91,16 +87,27 @@ def api(request):
     if not pmcids:
         return JsonResponse({'status': True, 'n': 0})
 
-    pool = Pool(psutil.cpu_count(logical=False))
+    print(tags, ignoretags)
+
+    # pool = Pool(psutil.cpu_count(logical=False))
+    # fp, fpath = tempfile.mkstemp(suffix='.lndoc', dir=settings.MEDIA_ROOT)
+    # with open(fp, 'w') as ofp:
+    #     cnt = 0
+    #     # for pmcid, text in pool.imap(_get_article_text, Article.objects.filter(pmcid__in=pmcids).iterator(), chunksize=100):
+    #     for pmcid, text in pool.starmap(_get_article_text, zip(itertools.repeat((tags, ignoretags)), Article.objects.filter(pmcid__in=pmcids).iterator()), chunksize=100):
+    #         line = '{}\t{}\n'.format(pmcid, text)
+    #         ofp.write(line)
+    #         cnt += 1
+
     fp, fpath = tempfile.mkstemp(suffix='.lndoc', dir=settings.MEDIA_ROOT)
     with open(fp, 'w') as ofp:
         cnt = 0
-        # for pmcid, text in pool.imap(_get_article_text, Article.objects.filter(pmcid__in=pmcids).iterator(), chunksize=100):
-        for pmcid, text in pool.starmap(_get_article_text, zip(itertools.repeat((tags, ignoretags)), Article.objects.filter(pmcid__in=pmcids).iterator()), chunksize=100):
+        for article in Article.objects.filter(pmcid__in=pmcids).iterator():
+            # print(article.pmcid)
+            pmcid, text = _get_article_text((tags, ignoretags), article)
             line = '{}\t{}\n'.format(pmcid, text)
             ofp.write(line)
             cnt += 1
-
 
 
     # fp, fpath = tempfile.mkstemp(suffix='.lndoc', dir=settings.MEDIA_ROOT)
