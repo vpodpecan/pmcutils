@@ -24,11 +24,12 @@ $(document).ready(function () {
         var query = $('#id_query').val().trim();
         var tags = $('#id_tags').val().trim();
         var ignoretags = $('#id_ignoretags').val().trim();
+        var nonempty = $('#id_nonempty').is(':checked');
         var stype = $('input[name=pubtype]:checked', '#searchform').val().trim();
 
 
         var spinHandle = loadingOverlay().activate();
-        var posting = $.post('api', { 'q': query, 't': tags, 'it': ignoretags, 'st': stype} );
+        var posting = $.post('api', { 'q': query, 't': tags, 'it': ignoretags, 'st': stype, 'n': nonempty} );
         posting.done(function( data ) {
             console.log(data);
             // var content = $( data ).find( "#content" );

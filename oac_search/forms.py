@@ -9,5 +9,6 @@ class SearchForm(forms.Form):
     tags = forms.CharField(label='XML tags to take text from (leave empty for all)', max_length=1000, required=False,
                             widget=forms.TextInput(attrs={'placeholder': 'for example: abstract, body'}))
     ignoretags = forms.CharField(label='XML tags to ignore (leave empty for nothing)',  max_length=1000, required=False,
-                            widget=forms.TextInput(attrs={'placeholder': 'for example: front, back, xref'}))
+                            widget=forms.TextInput(attrs={'placeholder': 'for example: back, xref'}))
+    nonempty = forms.BooleanField(label='do not return empty XML extraction results', required=False, initial=True)
     pubtype = forms.ChoiceField(label='PMC article subset', widget=forms.RadioSelect, choices=PUBTYPES, initial=PUBTYPES[1][0])

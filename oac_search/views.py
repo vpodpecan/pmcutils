@@ -43,16 +43,42 @@ def _get_article_text(xmltags, article):
 
     root = bs(article.xml, 'xml')
     for tag in ignoretags:
-        _ = [x.extract() for x in root.find_all(tag)]
+        if '=' in tag:
+            parts = [x.strip() for x in tag.split('=')]
+            if len(parts) != 2:
+                continue
+            atrval = eval(parts[1])
+            tag_atr = [x.strip() for x in parts[0].split()]
+            if len(tag_atr) != 2:
+                continue
+            blocktag = tag_atr[0]
+            atrname = tag_atr[1]
+            _ = [x.extract() for x in root.find_all(blocktag, attrs={atrname: eval(atrval)})]
+        else:
+            _ = [x.extract() for x in root.find_all(tag)]
 
     textblocks = []
-    for t in tags:
-        data = [x.get_text(separator=u' ') for x in root.find_all(t)]
-        print(data)
+    for tag in tags:
+        if '=' in tag:
+            parts = [x.strip() for x in tag.split('=')]
+            if len(parts) != 2:
+                continue
+            atrval = eval(parts[1])
+            tag_atr = [x.strip() for x in parts[0].split()]
+            if len(tag_atr) != 2:
+                continue
+            blocktag = tag_atr[0]
+            atrname = tag_atr[1]
+            data = [x.get_text(separator=u' ') for x in root.find_all(blocktag, attrs={atrname: atrval})]
+        else:
+            data = [x.get_text(separator=u' ') for x in root.find_all(tag)]
         textblocks.extend(data)
 
-
-    text = ' '.join(textblocks).strip().replace('\n', ' ').replace('\t', ' ').replace('  ', ' ').replace('  ', ' ')
+    text = ' '.join(textblocks).strip()
+    # replace all unicode line terminators
+    for nl in ['\u000A', '\u000B', '\u000C', '\u000D', '\u0085', '\u2028', '\u2029']:
+        text = text.replace(nl, ' ')
+    text = text.replace('\t', ' ').strip()
     return article.pmcid, unidecode.unidecode(text)
 
 
@@ -66,6 +92,7 @@ def api(request):
     query = d.get('q', '')
     pubtype = d.get('st', '')
     tags = d.get('t', '')
+    nonempty = d.get('t', '')
     ignoretags = d.get('it', '')
 
     if not query or not pubtype or pubtype not in [x[0] for x in PUBTYPES]:
@@ -81,7 +108,10 @@ def api(request):
         onlyOAC = True
 
     a = pubmed.NCBI_Extractor()
-    pmcids = a.query(query, db='pmc', onlyFreetext=onlyFreetext, onlyOAC=onlyOAC)
+    try:
+        pmcids = a.query(query, db='pmc', onlyFreetext=onlyFreetext, onlyOAC=onlyOAC)
+    except:
+        return _error('Error while calling NCBI search. Try again later.')
     pmcids = ['PMC' + x for x in pmcids]
 
     if not pmcids:
@@ -102,12 +132,16 @@ def api(request):
     fp, fpath = tempfile.mkstemp(suffix='.lndoc', dir=settings.MEDIA_ROOT)
     with open(fp, 'w') as ofp:
         cnt = 0
+        empty = 0
         for article in Article.objects.filter(pmcid__in=pmcids).iterator():
-            # print(article.pmcid)
+            cnt += 1
             pmcid, text = _get_article_text((tags, ignoretags), article)
+            if text == '':
+                empty += 1
+                if nonempty:
+                    continue
             line = '{}\t{}\n'.format(pmcid, text)
             ofp.write(line)
-            cnt += 1
 
 
     # fp, fpath = tempfile.mkstemp(suffix='.lndoc', dir=settings.MEDIA_ROOT)
@@ -118,4 +152,4 @@ def api(request):
     #         ofp.write(line)
     #         cnt += 1
     print(len(pmcids), cnt, fpath)
-    return JsonResponse({'status': True, 'n': cnt, 'f': fpath})
+    return JsonResponse({'status': True, 'total': len(pmcids), 'empty': empty, 'inDB': cnt})
