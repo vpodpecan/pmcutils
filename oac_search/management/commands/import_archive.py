@@ -72,6 +72,7 @@ class Command(BaseCommand):
                         except Exception as e:
                             errors['content'].append(tarinfo.name)
                             print(e)
+                            continue
 
                     # PMC is either the filename or it can be found inside xml
                     try:
@@ -80,6 +81,7 @@ class Command(BaseCommand):
                             pmcid = parse_xml.find_pmcid(xmldata)
                     except:
                         errors['file'].append(tarinfo.name)
+                        continue
 
                     (new, created) = models.Article.objects.get_or_create(pmcid=pmcid)
                     if not created and not overwrite:
@@ -96,10 +98,12 @@ class Command(BaseCommand):
                             new.cleantext = parse_xml.extract_text(xmldata)
                         except:
                             errors['content'].append(tarinfo.name)
+                            continue
                     else:
                         new.text = ''
                         new.cleantext = ''
                     new.save()
+
                     processed += 1
                     if (i+1) % 100 == 0:
                         print('{} articles processed'.format(i+1))
