@@ -13,6 +13,8 @@ import traceback
 import pickle
 
 
+NCBI_API_KEY_PODPECAN = '21b0ad51c2c17037424700195e7fc5e14608'
+
 class Document(object):
     def __init__(self):
         self.docid = None
@@ -97,14 +99,13 @@ class NCBI_Extractor(object):
         if not queryText:
             raise ValueError('Empty query!')
 
-        query = [('db', db)]
         qtparam = ''
         if onlyFreetext:
             qtparam += ' AND free fulltext[filter]'
         if onlyOAC:
             qtparam += ' AND open access[filter]'
 
-        query = [('db', db), ('term', queryText + qtparam)]
+        query = [('api_key', NCBI_API_KEY_PODPECAN), ('db', db), ('term', queryText + qtparam)]
 
         # if onlyOAC:
         #     query = [('db', db), ('term', queryText + ' AND free fulltext[filter]')]  # AND open access[filter]')]
