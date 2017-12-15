@@ -9,6 +9,8 @@ $(document).ready(function () {
     //   event.preventDefault();
     // });
 
+    $('#results').hide();
+
     $.ajaxSetup({
         beforeSend: function(xhr, settings) {
             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -31,13 +33,30 @@ $(document).ready(function () {
         var spinHandle = loadingOverlay().activate();
         var posting = $.post('api', { 'q': query, 't': tags, 'it': ignoretags, 'st': stype, 'n': nonempty} );
         posting.done(function( data ) {
-            console.log(data);
-            // var content = $( data ).find( "#content" );
-            // $( "#result" ).empty().append( content );
-            // clearform();
+            if(!data.status) {
+                bootbox.alert({
+                  size: "small",
+                  title: "Processing error",
+                  message: "Message: " + data.message,
+                  callback: function(){}
+              });
+            }
+            else{
+                $('#results').show(1000);
+                $('#pmchits').text(data.pmchits);
+                $('#indb').text(data.indb);
+                $('#empty').text(data.empty);
+                $('#corpuslink').attr('href', '/media/' + data.fname);
+                $('#corpuslink').text(data.fname + ' (' + data.fsize + ', ' + data.exported + ' documents)');
+            }
         });
         posting.fail(function() {
-            alert('Server error. Please contact the administrator (vid.podpecan@ijs.si)')
+            bootbox.alert({
+              size: "small",
+              title: "Server error",
+              message: 'An error occurred on the server. Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>',
+              callback: function(){}
+          });
         });
         posting.always(function() {
             loadingOverlay().cancel(spinHandle);
