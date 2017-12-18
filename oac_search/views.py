@@ -147,6 +147,49 @@ def _get_article_text_fast(xmltags, article):
 @ratelimit(key='ip', method=ratelimit.ALL, rate='5/m')
 @ratelimit(key='ip', method=ratelimit.ALL, rate='30/h')
 @ratelimit(key='ip', method=ratelimit.ALL, rate='200/d')
+def api_query(request):
+    was_limited = getattr(request, 'limited', False)
+    if was_limited:
+        return _error('Request blocked due to rate limiting. The rates are: 1/10s, 5/m, 30/h, 200/d')
+
+    if request.method != 'POST':
+        return _error('Invalid request')
+
+    d = request.POST
+    query = d.get('q', '')
+    pubtype = d.get('st', '')
+    if pubtype == 'free':
+        onlyFreetext = True
+        onlyOAC = False
+    elif pubtype == 'oac':
+        onlyFreetext = False
+        onlyOAC = True
+
+    if not query or not pubtype or pubtype not in [x[0] for x in PUBTYPES]:
+        return _error('Invalid request')
+
+    a = pubmed.NCBI_Extractor()
+    try:
+        pmcids = a.query(query, db='pmc', onlyFreetext=onlyFreetext, onlyOAC=onlyOAC)
+    except:
+        return _error('Error while calling NCBI search. Try again later.')
+    pmcids = ['PMC' + x for x in pmcids]
+
+    if not pmcids:
+        return JsonResponse({'status': True,
+                             'pmchits': 0,
+                             'indb': 0})
+
+    indb = Article.objects.filter(pmcid__in=pmcids).count()
+    return JsonResponse({'status': True,
+                         'pmchits': len(pmcids),
+                         'indb': indb})
+
+
+@ratelimit(key='ip', method=ratelimit.ALL, rate='1/10s')
+@ratelimit(key='ip', method=ratelimit.ALL, rate='5/m')
+@ratelimit(key='ip', method=ratelimit.ALL, rate='30/h')
+@ratelimit(key='ip', method=ratelimit.ALL, rate='200/d')
 def api(request):
     was_limited = getattr(request, 'limited', False)
     if was_limited:
@@ -154,6 +197,7 @@ def api(request):
 
     if request.method != 'POST':
         return _error('Invalid request')
+
 
     d = request.POST
     query = d.get('q', '')
@@ -209,7 +253,7 @@ def api(request):
 
     # poolSize = max(1, int(psutil.cpu_count()/2))
     poolSize = psutil.cpu_count()
-    chunkSize = min(len(pmcids) // poolSize, 1000)
+    chunkSize = int(len(pmcids)**0.5 / 2)   # min(len(pmcids) // poolSize, 1000)
     print('pool and chunk size: ', poolSize, chunkSize)
     # pool = Pool(psutil.cpu_count())
     pool = Pool(poolSize)
@@ -220,7 +264,7 @@ def api(request):
         empty = 0
         nwritten = 0
 
-        for pmcid, text in pool.starmap(_get_article_text_fast, zip(itertools.repeat((tags, ignoretags)), Article.objects.filter(pmcid__in=pmcids).values('pmcid', 'xml').iterator()), chunksize=chunkSize):  # 500 je ok
+        for pmcid, text in pool.starmap(_get_article_text_fast, zip(itertools.repeat((tags, ignoretags)), Article.objects.filter(pmcid__in=pmcids).values('pmcid', 'xml').iterator()), chunksize=20):  # 500 je ok
         # for article in Article.objects.filter(pmcid__in=pmcids).iterator():
             cnt += 1
             # pmcid, text = _get_article_text((tags, ignoretags), article)

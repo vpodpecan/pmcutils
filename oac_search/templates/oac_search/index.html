@@ -22,6 +22,7 @@
     <script src="{% static 'oac_search/js/loadingOverlay.js' %}"></script>
     <script src="{% static 'oac_search/js/bootstrap.min.js' %}"></script>
     <script src="{% static 'oac_search/js/bootbox.min.js' %}"></script>
+    <script src="{% static 'oac_search/js/sprintf.min.js' %}"></script>
     <script src="{% static 'oac_search/js/main.js' %}"></script>
     {% endcompress %}
 
@@ -69,7 +70,10 @@
                 {% buttons %}
                 {# <button type="submit" class="btn btn-primary">#}
                 <button id="searchbutton" type="submit" class="btn btn-primary">
-                    {% bootstrap_icon "search" %} search
+                    {% bootstrap_icon "search" %} search and export
+                </button>
+                <button id="querybutton" type="button" class="btn btn-primary">
+                    {% bootstrap_icon "info-sign" %} search only
                 </button>
                 {% endbuttons %}
               </form>
@@ -77,26 +81,27 @@
               <div id="results">
                   <hr class="style14">
 
-                  <h2>Results</h2>
+                  <div id="resultsSection">
+                      <h2>Results</h2>
+                      <table class="table table-condensed table-bordered">
+                          <tr class="text-center">
+                            <th>PMC hits</th>
+                            <th>found in database</th>
+                            <th>empty after XML extraction</th>
+                          </tr>
+                          <tr>
+                            <td id="pmchits"></td>
+                            <td id="indb"></td>
+                            <td id="empty"></td>
+                          </tr>
+                      </table>
+                  </div>
 
-                  <table class="table table-condensed table-bordered">
-                      <tr class="text-center">
-                        <th>PMC hits</th>
-                        <th>found in database</th>
-                        <th>empty after XML extraction</th>
-                      </tr>
-                      <tr>
-                        <td id="pmchits"></td>
-                        <td id="indb"></td>
-                        <td id="empty"></td>
-                      </tr>
-                  </table>
-
-                  <h4>Download corpus</h4>
-                  <a id="corpuslink" href=""></a><span id="corpusinfo"></span>
-
+                  <div id="downloadSection">
+                      <h4>Download corpus</h4>
+                      <a id="corpuslink" href=""></a><span id="corpusinfo"></span>
+                   </div>
               </div>
-
 
           </div>
 
