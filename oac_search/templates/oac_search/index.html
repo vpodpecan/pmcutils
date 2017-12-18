@@ -69,11 +69,11 @@
                 {% bootstrap_form form %}
                 {% buttons %}
                 {# <button type="submit" class="btn btn-primary">#}
-                <button id="searchbutton" type="submit" class="btn btn-primary">
+                <button id="searchbutton" type="submit" class="btn btn-primary" title="find, extract, and download articles matching the query">
                     {% bootstrap_icon "search" %} search and export
                 </button>
-                <button id="querybutton" type="button" class="btn btn-primary">
-                    {% bootstrap_icon "info-sign" %} search only
+                <button id="querybutton" type="button" class="btn btn-primary" title="find the number of articles matching the query">
+                    {% bootstrap_icon "info-sign" %} search
                 </button>
                 {% endbuttons %}
               </form>
@@ -127,13 +127,9 @@
                 <h3>Limitations</h3>
                 <ol>
                     <li>
-                        Expect longer processing times for general queries (several minutes)
-                    </li>
-                    <li>
-                        Every IP is limited to 1 in ten seconds, 5 queries per minute, 30 per hour, 200 per day.
+                        Due to NCBI API query limit we also enforce strict limiting: every user IP is limited to 1 query in 10 seconds, 5 queries per minute, 30 per hour, 200 per day.
                     </li>
                 </ol>
-
 
             </div>
         </div>

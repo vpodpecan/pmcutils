@@ -27,11 +27,6 @@ def _error(message):
     return JsonResponse({'status': False, 'message': message})
 
 
-def generate_id():
-    s = strftime('%a-%d-%b-%Y-%H-%M-%S')
-    return '%s--%s' % (s, sha1(s.encode()).hexdigest()[:5])
-
-
 def index(request):
     # if request.method == 'GET':
     context = {'form': SearchForm(initial={'pubtype': PUBTYPES[1][0]}),
@@ -150,7 +145,7 @@ def _get_article_text_fast(xmltags, article):
 def api_query(request):
     was_limited = getattr(request, 'limited', False)
     if was_limited:
-        return _error('Request blocked due to rate limiting. The rates are: 1/10s, 5/m, 30/h, 200/d')
+        return _error('Request blocked due to rate limiting. The rates are: 1 per 10 seconds, 5 per minute, 30 per hour, 200 per day')
 
     if request.method != 'POST':
         return _error('Invalid request')
@@ -193,11 +188,10 @@ def api_query(request):
 def api(request):
     was_limited = getattr(request, 'limited', False)
     if was_limited:
-        return _error('Request blocked due to rate limiting. The rates are: 1/10s, 5/m, 30/h, 200/d')
+        return _error('Request blocked due to rate limiting. The rates are: 1 per 10 seconds, 5 per minute, 30 per hour, 200 per day')
 
     if request.method != 'POST':
         return _error('Invalid request')
-
 
     d = request.POST
     query = d.get('q', '')
@@ -234,21 +228,6 @@ def api(request):
                              'fsize': 0,
                              'fname': 0})
 
-    # print(tags, ignoretags)
-    # print(pmcids)
-    # return
-
-    # pool = Pool(psutil.cpu_count(logical=False))
-    # fp, fpath = tempfile.mkstemp(suffix='.lndoc', dir=settings.MEDIA_ROOT)
-    # with open(fp, 'w') as ofp:
-    #     cnt = 0
-    #     # for pmcid, text in pool.imap(_get_article_text, Article.objects.filter(pmcid__in=pmcids).iterator(), chunksize=100):
-    #     for pmcid, text in pool.starmap(_get_article_text, zip(itertools.repeat((tags, ignoretags)), Article.objects.filter(pmcid__in=pmcids).iterator()), chunksize=100):
-    #         line = '{}\t{}\n'.format(pmcid, text)
-    #         ofp.write(line)
-    #         cnt += 1
-
-
     start = time()
 
     # poolSize = max(1, int(psutil.cpu_count()/2))
@@ -264,7 +243,7 @@ def api(request):
         empty = 0
         nwritten = 0
 
-        for pmcid, text in pool.starmap(_get_article_text_fast, zip(itertools.repeat((tags, ignoretags)), Article.objects.filter(pmcid__in=pmcids).values('pmcid', 'xml').iterator()), chunksize=20):  # 500 je ok
+        for pmcid, text in pool.starmap(_get_article_text_fast, zip(itertools.repeat((tags, ignoretags)), Article.objects.filter(pmcid__in=pmcids).values('pmcid', 'xml').iterator()), chunksize=chunkSize):  # 500 je ok
         # for article in Article.objects.filter(pmcid__in=pmcids).iterator():
             cnt += 1
             # pmcid, text = _get_article_text((tags, ignoretags), article)
@@ -278,19 +257,9 @@ def api(request):
 
     print('total time {:.1f}'.format(time()-start))
 
-    # fp, fpath = tempfile.mkstemp(suffix='.lndoc', dir=settings.MEDIA_ROOT)
-    # with open(fp, 'w') as ofp:
-    #     cnt = 0
-    #     for article in Article.objects.filter(pmcid__in=pmcids).iterator():
-    #         line = '{}\t{}\n'.format(article.pmcid, unidecode.unidecode(article.cleantext))
-    #         ofp.write(line)
-    #         cnt += 1
-    # print(len(pmcids), cnt, fpath)
-
     zfpath = fpath + '.zip'
     with zipfile.ZipFile(zfpath, mode='w', compression=zipfile.ZIP_BZIP2) as fz:
         fz.write(fpath)
-
     os.remove(fpath)
 
     fsize = os.path.getsize(zfpath)

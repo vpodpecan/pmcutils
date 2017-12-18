@@ -9,7 +9,20 @@ $(document).ready(function () {
     //   event.preventDefault();
     // });
 
+    var lastQuery = '';
+
     $('#results').hide();
+    $('#searchbutton').attr("disabled", true);
+
+
+    $("#id_query").on('input',function(e){
+        if($("#id_query").val().trim() != lastQuery) {
+            $('#searchbutton').attr("disabled", true);
+        }
+        else{
+            $('#searchbutton').removeAttr("disabled");
+        }
+    });
 
     $.ajaxSetup({
         beforeSend: function(xhr, settings) {
@@ -20,56 +33,69 @@ $(document).ready(function () {
     });
 
     $('#querybutton').click(function(event) {
-        var spinHandle = loadingOverlay().activate();
+        // event.preventDefault();
 
         var query = $('#id_query').val().trim();
         var stype = $('input[name=pubtype]:checked', '#searchform').val().trim();
 
-        var posting = $.post('ask', { 'q': query, 'st': stype} );
-        posting.done(function( data ) {
-            if(!data.status) {
-                bootbox.alert({
-                  size: "small",
-                  title: "Processing error",
-                  message: data.message,
-                  callback: function(){}
-              });
-            }
-            else{
-                // console.log(data);
-                if(!data.pmchits) {
+        if(!query) {
+            bootbox.alert({
+              title: "Empty query!",
+              message: 'Please enter a valid query.'
+          });
+        }
+        else {
+            var spinHandle = loadingOverlay().activate();
+
+            lastQuery = query;
+
+            var posting = $.post('ask', { 'q': query, 'st': stype} );
+            posting.done(function( data ) {
+                if(!data.status) {
                     bootbox.alert({
-                      title: "No results!",
-                      message: 'Maybe your query is invalid or no freetext articles match your query.'
+                      size: "small",
+                      title: "Processing error",
+                      message: data.message,
+                      callback: function(){}
                   });
                 }
-                else if(!data.indb){
-                    bootbox.alert({
-                      title: "No results!",
-                      message: 'No articles matching the query were found in the database.<br> Maybe you should contact the administrator and ask for an update.'
-                    });
+                else{
+                    // console.log(data);
+                    if(!data.pmchits) {
+                        bootbox.alert({
+                          title: "No results!",
+                          message: 'Maybe your query is invalid or no freetext articles match your query.'
+                      });
+                    }
+                    else if(!data.indb){
+                        bootbox.alert({
+                          title: "No results!",
+                          message: 'No articles matching the query were found in the database.<br> Maybe you should contact the administrator and ask for an update.'
+                        });
+                    }
+                    else {
+                        bootbox.alert({
+                          size: 'large',
+                          title: "Results",
+                          message: sprintf('%d articles were found by PMC search.<br>%d are present in the database.<br><br>Click on <strong>search and export</strong> to download the corpus', data.pmchits, data.indb),
+                          className: "modalSmall",
+                          callback: function(){$('#searchbutton').removeAttr("disabled");}
+                        });
+                    }
                 }
-                else {
-                    bootbox.alert({
-                      size: 'large',
-                      title: "Results",
-                      message: sprintf('%d articles were found by PMC search.<br>%d are present in the database.<br><br>Click on <strong>search and export</strong> to download the corpus', data.pmchits, data.indb),
-                      className: "modalSmall"
-                    });
-                }
-            }
-        });
-        posting.fail(function() {
-            bootbox.alert({
-              size: "small",
-              title: "Server error",
-              message: 'An error occurred on the server. Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>',
-              callback: function(){}
-          });
-        });
-        posting.always(function() {
-            loadingOverlay().cancel(spinHandle);
-        })
+            });
+            posting.fail(function() {
+                bootbox.alert({
+                  size: "small",
+                  title: "Server error",
+                  message: 'An error occurred on the server. Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>',
+                  callback: function(){}
+              });
+            });
+            posting.always(function() {
+                loadingOverlay().cancel(spinHandle);
+            })
+        }
     });
 
 
