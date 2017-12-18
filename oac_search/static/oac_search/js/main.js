@@ -47,7 +47,8 @@ $(document).ready(function () {
                 $('#indb').text(data.indb);
                 $('#empty').text(data.empty);
                 $('#corpuslink').attr('href', '/media/' + data.fname);
-                $('#corpuslink').text(data.fname + ' (' + data.fsize + ', ' + data.exported + ' documents)');
+                $('#corpuslink').text(data.fname);
+                $('#corpusinfo').text(' (' + data.fsize + ', ' + data.exported + ' documents)');
             }
         });
         posting.fail(function() {

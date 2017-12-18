@@ -1,4 +1,5 @@
 {% load static %}
+{% load compress %}
 {% load bootstrap3 %}
 {% load humanize %}
 
@@ -10,44 +11,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    {% bootstrap_css %}
+    {% compress css %}
+    <link rel="stylesheet" href="{% static 'oac_search/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'oac_search/css/main.css' %}">
+    {% endcompress %}
 
+    {% compress js %}
     <script src="{% static 'oac_search/js/jquery-3.2.1.min.js' %}"></script>
     <script src="{% static 'oac_search/js/js.cookie.js' %}"></script>
     <script src="{% static 'oac_search/js/loadingOverlay.js' %}"></script>
-    {% bootstrap_javascript %}
+    <script src="{% static 'oac_search/js/bootstrap.min.js' %}"></script>
     <script src="{% static 'oac_search/js/bootbox.min.js' %}"></script>
     <script src="{% static 'oac_search/js/main.js' %}"></script>
-
-    <style>
-        .infotext {
-            color: gray;
-        }
-
-        .btm-buffer {
-            margin-bottom: 30px;
-        }
-
-        th, tr {
-            text-align: center;
-        }
-        textarea {
-            min-height: 50px;
-            max-height: 300px;
-            overflow-y: scroll;
-            resize: vertical;
-        }
-    </style>
-
-    <script>
-    </script>
+    {% endcompress %}
 
   </head>
   <body>
 
 
     <div class="container">
-
         <div class="row btm-buffer">
             <div class="col-md-6 col-md-offset-3">
                 <h1>Search & export PMC articles</h1>
@@ -55,8 +37,8 @@
         </div>
 
         <div class="row btm-buffer">
-            <div class="col-md-3 infotext">
-                <h3>Database info</h3>
+            <div class="col-md-3 infotext smallerfonts">
+                <h4>Database info</h4>
                 <dl>
                     <dt>Archives</dt>
                     <dd>{{ archives.count|intcomma }}</dd>
@@ -66,7 +48,7 @@
 
                 </dl>
 
-                <h3>Archive versions</h3>
+                <h4>Archive versions</h4>
                 <dl class="dl">
                     {% for a in archives %}
                         <dt>{{ a.name }}</dt>
@@ -91,6 +73,31 @@
                 </button>
                 {% endbuttons %}
               </form>
+
+              <div id="results">
+                  <hr class="style14">
+
+                  <h2>Results</h2>
+
+                  <table class="table table-condensed table-bordered">
+                      <tr class="text-center">
+                        <th>PMC hits</th>
+                        <th>found in database</th>
+                        <th>empty after XML extraction</th>
+                      </tr>
+                      <tr>
+                        <td id="pmchits"></td>
+                        <td id="indb"></td>
+                        <td id="empty"></td>
+                      </tr>
+                  </table>
+
+                  <h4>Download corpus</h4>
+                  <a id="corpuslink" href=""></a><span id="corpusinfo"></span>
+
+              </div>
+
+
           </div>
 
             <div class="col-md-3 infotext">
@@ -111,32 +118,31 @@
                         <samp>sec sec-type="results"</samp>
                     </li>
                 </ol>
-            </div>
-        </div>
 
-        <div class="row" id="results">
-            <div class="col-md-6 col-md-offset-3">
-                <h3>Results</h3>
+                <h3>Limitations</h3>
+                <ol>
+                    <li>
+                        Expect longer processing times for general queries (several minutes)
+                    </li>
+                    <li>
+                        Every IP is limited to 5 queries per minute, 30 per hour, 200 per day.
+                    </li>
+                </ol>
 
-                <table class="table table-condensed table-bordered">
-                    <tr class="text-center">
-                      <th>PMC hits</th>
-                      <th>found in database</th>
-                      <th>empty after XML extraction</th>
-                    </tr>
-                    <tr>
-                      <td id="pmchits"></td>
-                      <td id="indb"></td>
-                      <td id="empty"></td>
-                    </tr>
-                </table>
-
-                <h4>Download corpus</h4>
-                <a id="corpuslink" href=""></a>
 
             </div>
         </div>
 
     </div>
+
+    <footer class="footer">
+          <div class="container text-center">
+            <p class="text-muted">&copy; 2017 <a href="http://kt.ijs.si/vid_podpecan/">Vid Podpečan</a> </br>
+
+                <a href="https://www.ijs.si/ijsw/V001/JSI">Jožef Stefan Institute</a> & <a href="http://www.nib.si/eng/">National Institute of Biology</a>
+            </p>
+          </div>
+        </footer>
   </body>
+
 </html>
