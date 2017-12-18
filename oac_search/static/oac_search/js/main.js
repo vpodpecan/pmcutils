@@ -42,13 +42,22 @@ $(document).ready(function () {
               });
             }
             else{
+                console.log(data);
+                if(!data.pmchits) {
+                    $('#results').html('<hr class="style14"> <h3>No results!</h3><p>Maybe your query is invalid or no freetext articles exist.</>');
+                }
+                else if(!data.indb){
+                    $('#results').html('<hr class="style14"> <h3>No results!</h3><p>No articles matching the query were found in the database. Maybe you should contact the administrator and ask for an update.</>');
+                }
+                else {
+                    $('#pmchits').text(data.pmchits);
+                    $('#indb').text(data.indb);
+                    $('#empty').text(data.empty);
+                    $('#corpuslink').attr('href', '/media/' + data.fname);
+                    $('#corpuslink').text(data.fname);
+                    $('#corpusinfo').text(' (' + data.fsize + ', ' + data.exported + ' documents)');
+                }
                 $('#results').show(1000);
-                $('#pmchits').text(data.pmchits);
-                $('#indb').text(data.indb);
-                $('#empty').text(data.empty);
-                $('#corpuslink').attr('href', '/media/' + data.fname);
-                $('#corpuslink').text(data.fname);
-                $('#corpusinfo').text(' (' + data.fsize + ', ' + data.exported + ' documents)');
             }
         });
         posting.fail(function() {

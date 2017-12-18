@@ -5,10 +5,12 @@ import unidecode
 from multiprocessing import Pool
 import psutil
 import itertools
-from time import strftime, time
+from time import time
+from datetime import datetime
 from hashlib import sha1
 
 from bs4 import BeautifulSoup as bs
+from ratelimit.decorators import ratelimit
 
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
@@ -141,13 +143,19 @@ def _get_article_text_fast(xmltags, article):
     return article['pmcid'], unidecode.unidecode(text)
 
 
+@ratelimit(key='ip', method=ratelimit.ALL, rate='1/10s')
+@ratelimit(key='ip', method=ratelimit.ALL, rate='5/m')
+@ratelimit(key='ip', method=ratelimit.ALL, rate='30/h')
+@ratelimit(key='ip', method=ratelimit.ALL, rate='200/d')
 def api(request):
+    was_limited = getattr(request, 'limited', False)
+    if was_limited:
+        return _error('Request blocked due to rate limiting. The rates are: 1/10s, 5/m, 30/h, 200/d')
 
     if request.method != 'POST':
         return _error('Invalid request')
 
     d = request.POST
-    print(d)
     query = d.get('q', '')
     pubtype = d.get('st', '')
     tags = d.get('t', '')
@@ -174,9 +182,15 @@ def api(request):
     pmcids = ['PMC' + x for x in pmcids]
 
     if not pmcids:
-        return JsonResponse({'status': True, 'n': 0})
+        return JsonResponse({'status': True,
+                             'pmchits': 0,
+                             'empty': 0,
+                             'exported': 0,
+                             'indb': 0,
+                             'fsize': 0,
+                             'fname': 0})
 
-    print(tags, ignoretags)
+    # print(tags, ignoretags)
     # print(pmcids)
     # return
 
@@ -196,11 +210,12 @@ def api(request):
     # poolSize = max(1, int(psutil.cpu_count()/2))
     poolSize = psutil.cpu_count()
     chunkSize = min(len(pmcids) // poolSize, 1000)
-    print(poolSize, chunkSize)
+    print('pool and chunk size: ', poolSize, chunkSize)
     # pool = Pool(psutil.cpu_count())
     pool = Pool(poolSize)
-    fp, fpath = tempfile.mkstemp(suffix='.lndoc', prefix=strftime('%a-%d-%b-%Y-%H-%M-%S') + '--', dir=settings.MEDIA_ROOT)
-    with open(fp, 'w') as ofp:
+    fpath = os.path.join(settings.MEDIA_ROOT, datetime.now().strftime('%a-%d-%b-%Y-%H-%M-%S-%f') + '.lndoc')
+    # fp, fpath = tempfile.mkstemp(suffix='.lndoc', prefix=datetime.now().strftime('%a-%d-%b-%Y-%H-%M-%S-%f') + '--', dir=settings.MEDIA_ROOT)
+    with open(fpath, 'w') as ofp:
         cnt = 0
         empty = 0
         nwritten = 0
@@ -226,11 +241,13 @@ def api(request):
     #         line = '{}\t{}\n'.format(article.pmcid, unidecode.unidecode(article.cleantext))
     #         ofp.write(line)
     #         cnt += 1
-    print(len(pmcids), cnt, fpath)
+    # print(len(pmcids), cnt, fpath)
 
     zfpath = fpath + '.zip'
     with zipfile.ZipFile(zfpath, mode='w', compression=zipfile.ZIP_BZIP2) as fz:
         fz.write(fpath)
+
+    os.remove(fpath)
 
     fsize = os.path.getsize(zfpath)
     fsize = '{:.0f} MB'.format(fsize/1e6) if fsize > 1e6 else '{:.0f} KB'.format(fsize/1e3)

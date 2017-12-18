@@ -9,6 +9,7 @@ lxml==4.1.1
 unidecode==0.4.21
 psutil==5.4.2
 django-compressor==2.2
+django_ratelimit==1.1.0
 html5lib==1.0.1
 slimit==0.8.1
 csscompressor==0.9.5
