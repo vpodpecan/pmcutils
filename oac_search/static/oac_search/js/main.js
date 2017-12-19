@@ -88,7 +88,7 @@ $(document).ready(function () {
                 bootbox.alert({
                   size: "small",
                   title: "Server error",
-                  message: 'An error occurred on the server. Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>',
+                  message: 'An error occurred on the server.<br> Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>',
                   callback: function(){}
               });
             });
@@ -164,7 +164,7 @@ $(document).ready(function () {
             bootbox.alert({
               size: "small",
               title: "Server error",
-              message: 'An error occurred on the server. Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>',
+              message: 'An error occurred on the server.<br>Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>',
               callback: function(){}
           });
         });
