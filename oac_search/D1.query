@@ -1,1 +1,0 @@
-(arabidopsis OR oryza OR solanum OR nicotiana OR maize OR cotton) AND ("defence" OR "defense" OR "immune" OR "hypersensitive" OR "hypersensitivity" OR "resistance" OR "susceptible" OR "susceptibility" OR "pathogen" OR "virus") and not (cigarette OR smoking OR carcinoma OR cancer OR insulin OR diabetes OR "Parkinson's" OR mice OR rodents OR zebrafish OR teenagers) 

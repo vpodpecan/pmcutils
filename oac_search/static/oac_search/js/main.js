@@ -3,6 +3,14 @@ function csrfSafeMethod(method) {
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
 
+function serverError() {
+    bootbox.alert({
+      size: "small",
+      title: "Server error",
+      message: 'An error occurred on the server.<br> Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>'
+  });
+}
+
 $(document).ready(function () {
     // $( "#searchform" ).submit(function( event ) {
     //   alert( "Handler for .submit() called." );
@@ -85,12 +93,7 @@ $(document).ready(function () {
                 }
             });
             posting.fail(function() {
-                bootbox.alert({
-                  size: "small",
-                  title: "Server error",
-                  message: 'An error occurred on the server.<br> Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>',
-                  callback: function(){}
-              });
+                serverError();
             });
             posting.always(function() {
                 loadingOverlay().cancel(spinHandle);
@@ -142,7 +145,7 @@ $(document).ready(function () {
               });
             }
             else{
-                // console.log(data);
+                console.log(data);
                 if(!data.pmchits) {
                     $('#results').html('<hr class="style14"> <h3>No results!</h3><p>Maybe your query is invalid or no freetext articles exist.</>');
                 }
@@ -155,18 +158,14 @@ $(document).ready(function () {
                     $('#empty').text(data.empty);
                     $('#corpuslink').attr('href', '/media/' + data.fname);
                     $('#corpuslink').text(data.fname);
-                    $('#corpusinfo').text(' (' + data.fsize + ', ' + data.exported + ' documents)');
+                    $('#corpusinfo').text(sprintf(' (%s, %d documents)', data.fsize, parseInt(data.exported)));
+
                 }
                 $('#results').show(1000);
             }
         });
         posting.fail(function() {
-            bootbox.alert({
-              size: "small",
-              title: "Server error",
-              message: 'An error occurred on the server.<br>Please contact the administrator: <a href="mailto:vid.podpecan@ijs.si?Subject=PMC%20search%20server%20error" target="_top">vid.podpecan@ijs.si</a>',
-              callback: function(){}
-          });
+            serverError();
         });
         posting.always(function() {
             loadingOverlay().cancel(spinHandle);

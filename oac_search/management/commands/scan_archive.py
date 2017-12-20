@@ -1,13 +1,10 @@
 import tarfile
 import datetime
-from os.path import split, splitext, getctime, join
+from os.path import split, splitext, getctime
 from os import stat
 import platform
 import pytz
-import time
 from django.core.management.base import BaseCommand
-
-# from oac_search import models, parse_xml
 
 
 def get_creation_date(fpath):
@@ -22,7 +19,7 @@ def get_creation_date(fpath):
 
 
 class Command(BaseCommand):
-    help = 'Scan archive and perform different procedures'
+    help = 'Scan archive and perform different checks'
 
     def add_arguments(self, parser):
         parser.add_argument('archive', help="Archive path")
@@ -36,16 +33,9 @@ class Command(BaseCommand):
             self.check_names(ifpath)
 
     def check_names(self, archName):
-        # onetime = True
         with tarfile.open(archName, 'r:gz') as tar:
-            # processed = 0
-            # errors = {'file': [], 'content': []}
             for i, tarinfo in enumerate(tar):
-                # if i >= 50:
-                #     break
                 if tarinfo.isreg():
-                    # print(tarinfo.name)
-                    # fp = tar.extractfile(tarinfo)
                     ext = splitext(split(tarinfo.name)[1])[1].lower()
                     if ext not in ['.xml', '.nxml']:
                         print('archive "{}": not XML: "{}"'.format(archName, tarinfo.name))
@@ -53,11 +43,3 @@ class Command(BaseCommand):
                     pmcid = splitext(split(tarinfo.name)[1])[0]
                     if not pmcid.startswith('PMC') or len(pmcid) > 20:
                         print('archive "{}": invalid PMCID: "{}"'.format(archName, tarinfo.name))
-                        # if onetime:
-                        #     fp = tar.extractfile(tarinfo)
-                        #     with open(join('/home/vid/programiranje/wingIDE_projects/pmcutils/', split(tarinfo.name)[1]), 'wb') as ofp:
-                        #         ofp.write(fp.read())
-                        #     onetime = False
-
-                if (i+1) % 10000 == 0:
-                    print('---> {} files processed'.format(i+1))

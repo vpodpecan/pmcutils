@@ -7,7 +7,7 @@ import pytz
 import time
 from django.core.management.base import BaseCommand
 
-from oac_search import models, parse_xml
+from oac_search import models, pubmed
 
 
 def get_creation_date(fpath):
@@ -57,10 +57,7 @@ class Command(BaseCommand):
             errors = {'file': [], 'content': []}
             startTime = time.time()
             for i, tarinfo in enumerate(tar):
-                # if i >= 50:
-                #     break
                 if tarinfo.isreg():
-                    # print(tarinfo.name)
                     fp = tar.extractfile(tarinfo)
                     ext = splitext(split(tarinfo.name)[1])[1].lower()
                     if ext not in ['.xml', '.nxml']:
@@ -78,7 +75,7 @@ class Command(BaseCommand):
                     try:
                         pmcid = splitext(split(tarinfo.name)[1])[0]
                         if not pmcid.startswith('PMC'):
-                            pmcid = parse_xml.find_pmcid(xmldata)
+                            pmcid = pubmed.find_pmcid(xmldata)
                     except:
                         errors['file'].append(tarinfo.name)
                         continue
@@ -94,8 +91,8 @@ class Command(BaseCommand):
                     new.xml = xmldata
                     if extractText:
                         try:
-                            new.text = parse_xml.extract_text(xmldata, skipTags=[])
-                            new.cleantext = parse_xml.extract_text(xmldata)
+                            new.text = pubmed.extract_text(xmldata, skipTags=[])
+                            new.cleantext = pubmed.extract_text(xmldata)
                         except:
                             errors['content'].append(tarinfo.name)
                             continue

@@ -1,0 +1,26 @@
+[uwsgi]
+
+# Django-related settings
+# the base directory (full path)
+chdir           = /srv/django-projects/pmcutils/
+# Django's wsgi file
+module          = pmcutils.wsgi
+# the virtualenv (full path)
+home            = /srv/django-projects/pmcutils/pmcutils-venv
+# project settings
+env = DJANGO_SETTINGS_MODULE=pmcutils.settings
+
+
+# process-related settings
+# master
+master          = true
+# maximum number of worker processes
+processes       = 10
+# the socket (use the full path to be safe
+socket          = /srv/django-projects/pmcutils/pmcutils.sock
+# ... with appropriate permissions - may be needed
+chmod-socket    = 664
+# clear environment on exit
+vacuum          = true
+harakiri = 216000
+# logto = /srv/django-projects/pmcutils/pmcutils.log

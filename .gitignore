@@ -14,17 +14,11 @@
 atlassian-ide-plugin.xml
 *.sublime-*
 
-#*.sqlite3
-
-#media_root/*
-#static_root/*
-
 pmcutils/local_settings.py
+oac_search/api_key.py
 
 #conf/nginx.conf
 #conf/uwsgi.ini
 
-#databases/db.sqlite3
-
 # uwsgi socket
-#brapi.sock
+#pmcutils.sock

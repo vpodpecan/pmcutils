@@ -2,25 +2,20 @@ import tempfile
 import zipfile
 import os
 import unidecode
-from multiprocessing import Pool, Process, Queue, Value
+from multiprocessing import Process, Queue
 import psutil
-import itertools
 from time import time, sleep
 from datetime import datetime
-from hashlib import sha1
-import sys
 
 from bs4 import BeautifulSoup as bs
 from ratelimit.decorators import ratelimit
 
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from django.views.generic import TemplateView, View
-from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
 from oac_search.forms import PUBTYPES, SearchForm
-from oac_search import pubmed_oac as pubmed
+from oac_search import pubmed
 from oac_search.models import Archive, Article
 
 
@@ -131,6 +126,7 @@ class TextExtractor(Process):
         self.ignoretags = ignoretags
         self.workQueue = Queue()
         self.stopQueue = Queue()
+        self.variables = Queue()
         self.nempty = 0
         self.nwritten = 0
         self.nonempty = nonempty
@@ -193,7 +189,10 @@ class TextExtractor(Process):
                 with open(self.tempfile, 'a') as fp:
                     workload = self.workQueue.get()
                     for pmcid, xml in workload:
-                        text = self.__extract_text(xml)
+                        try:
+                            text = self.__extract_text(xml)
+                        except:
+                            text = ''
                         if text == '':
                             self.nempty += 1
                             if self.nonempty:
@@ -206,25 +205,18 @@ class TextExtractor(Process):
                     if self.stopQueue.get(block=False):
                         break
                     else:
-                        sleep(0.5)
+                        sleep(0.2)
                 except:
                     pass
+        self.variables.put({'nempty': self.nempty, 'nwritten': self.nwritten, 'fname': self.tempfile})
 # end
 
 
 def index(request):
-    # if request.method == 'GET':
     context = {'form': SearchForm(initial={'pubtype': PUBTYPES[1][0]}),
                'archives': Archive.objects.all().order_by('name'),
                'narticles': Article.objects.count()}
     return render(request, 'oac_search/index.html', context)
-    # else:
-    #     form = SearchForm(request.POST)
-    #     if form.is_valid():
-    #         params = form.cleaned_data
-    #         query = params['query']
-    #         pubtype = params['pubtype']
-    #         return render(request, 'oac_search/index.html', {'form': form, 'hits': pmcids})
 
 
 @ratelimit(key='ip', method=ratelimit.ALL, rate='1/10s')
@@ -252,7 +244,7 @@ def api_query(request):
     if not query or not pubtype or pubtype not in [x[0] for x in PUBTYPES]:
         return _error('Invalid request')
 
-    a = pubmed.NCBI_Extractor()
+    a = pubmed.NCBI_search()
     try:
         pmcids = a.query(query, db='pmc', onlyFreetext=onlyFreetext, onlyOAC=onlyOAC)
     except:
@@ -301,7 +293,7 @@ def api(request):
         onlyFreetext = False
         onlyOAC = True
 
-    a = pubmed.NCBI_Extractor()
+    a = pubmed.NCBI_search()
     try:
         pmcids = a.query(query, db='pmc', onlyFreetext=onlyFreetext, onlyOAC=onlyOAC)
     except:
@@ -333,28 +325,30 @@ def api(request):
         data = Article.objects.filter(pmcid__in=idsblock).values_list('pmcid', 'xml')
         indb += len(data)  # this also forces database access
 
+        # this scheduler may not get the accurate qsizes but is still trying
         workloads = [p.workQueue.qsize() for p in proc_pool]
         free = workloads.index(min(workloads))
         proc_pool[free].workQueue.put(data)
-        # print('added work to queue ', free)
 
-    print('sending stop signal')
+    # print('sending stop signal')
     for p in proc_pool:
         p.stopQueue.put(True)
 
-    print('joining')
+    # print('joining')
     for p in proc_pool:
         p.join()
-    print('processing finished')
+    # print('processing finished')
 
     empty = 0
     nwritten = 0
     fpath = os.path.join(settings.MEDIA_ROOT, datetime.now().strftime('%a-%d-%b-%Y-%H-%M-%S-%f') + '.lndoc')
     with open(fpath, 'w') as ofp:
         for p in proc_pool:
-            empty += p.nempty
-            nwritten += p.nwritten
-            with open(p.tempfile) as pfp:
+            variables = p.variables.get()
+            empty += variables['nempty']
+            nwritten += variables['nwritten']
+            # print(variables)
+            with open(variables['fname']) as pfp:
                 ofp.write(pfp.read())
 
     print('total time {:.1f}'.format(time()-start))
@@ -374,97 +368,3 @@ def api(request):
                          'fsize': fsize,
                          'fname': os.path.split(zfpath)[1]
                          })
-
-
-#
-# @ratelimit(key='ip', method=ratelimit.ALL, rate='1/10s')
-# @ratelimit(key='ip', method=ratelimit.ALL, rate='5/m')
-# @ratelimit(key='ip', method=ratelimit.ALL, rate='30/h')
-# @ratelimit(key='ip', method=ratelimit.ALL, rate='200/d')
-# def api(request):
-#     was_limited = getattr(request, 'limited', False)
-#     if was_limited:
-#         return _error('Request blocked due to rate limiting. The rates are: 1 per 10 seconds, 5 per minute, 30 per hour, 200 per day')
-#
-#     if request.method != 'POST':
-#         return _error('Invalid request')
-#
-#     d = request.POST
-#     query = d.get('q', '')
-#     pubtype = d.get('st', '')
-#     tags = d.get('t', '')
-#     nonempty = d.get('t', '')
-#     ignoretags = d.get('it', '')
-#
-#     if not query or not pubtype or pubtype not in [x[0] for x in PUBTYPES]:
-#         return _error('Invalid request')
-#
-#     tags = [x.strip() for x in tags.split(',') if x.strip()]
-#     ignoretags = [x.strip() for x in ignoretags.split(',') if x.strip()]
-#     if pubtype == 'free':
-#         onlyFreetext = True
-#         onlyOAC = False
-#     elif pubtype == 'oac':
-#         onlyFreetext = False
-#         onlyOAC = True
-#
-#     a = pubmed.NCBI_Extractor()
-#     try:
-#         pmcids = a.query(query, db='pmc', onlyFreetext=onlyFreetext, onlyOAC=onlyOAC)
-#     except:
-#         return _error('Error while calling NCBI search. Try again later.')
-#     pmcids = ['PMC' + x for x in pmcids]
-#
-#     if not pmcids:
-#         return JsonResponse({'status': True,
-#                              'pmchits': 0,
-#                              'empty': 0,
-#                              'exported': 0,
-#                              'indb': 0,
-#                              'fsize': 0,
-#                              'fname': 0})
-#
-#     start = time()
-#
-#     # poolSize = max(1, int(psutil.cpu_count()/2))
-#     poolSize = psutil.cpu_count()
-#     chunkSize = int(len(pmcids)**0.5 / 2)   # min(len(pmcids) // poolSize, 1000)
-#     print('pool and chunk size: ', poolSize, chunkSize)
-#     # pool = Pool(psutil.cpu_count())
-#     pool = Pool(poolSize)
-#     fpath = os.path.join(settings.MEDIA_ROOT, datetime.now().strftime('%a-%d-%b-%Y-%H-%M-%S-%f') + '.lndoc')
-#     # fp, fpath = tempfile.mkstemp(suffix='.lndoc', prefix=datetime.now().strftime('%a-%d-%b-%Y-%H-%M-%S-%f') + '--', dir=settings.MEDIA_ROOT)
-#     with open(fpath, 'w') as ofp:
-#         cnt = 0
-#         empty = 0
-#         nwritten = 0
-#
-#         for pmcid, text in pool.starmap(_get_article_text_fast, zip(itertools.repeat((tags, ignoretags)), Article.objects.filter(pmcid__in=pmcids).values('pmcid', 'xml').iterator()), chunksize=chunkSize):  # 500 je ok
-#         # for article in Article.objects.filter(pmcid__in=pmcids).iterator():
-#             cnt += 1
-#             # pmcid, text = _get_article_text((tags, ignoretags), article)
-#             if text == '':
-#                 empty += 1
-#                 if nonempty:
-#                     continue
-#             line = '{}\t{}\n'.format(pmcid, text)
-#             ofp.write(line)
-#             nwritten += 1
-#
-#     print('total time {:.1f}'.format(time()-start))
-#
-#     zfpath = fpath + '.zip'
-#     with zipfile.ZipFile(zfpath, mode='w', compression=zipfile.ZIP_BZIP2) as fz:
-#         fz.write(fpath, arcname=os.path.basename(fpath))
-#     os.remove(fpath)
-#
-#     fsize = os.path.getsize(zfpath)
-#     fsize = '{:.0f} MB'.format(fsize/1e6) if fsize > 1e6 else '{:.0f} KB'.format(fsize/1e3)
-#     return JsonResponse({'status': True,
-#                          'pmchits': len(pmcids),
-#                          'empty': empty,
-#                          'exported': nwritten,
-#                          'indb': cnt,
-#                          'fsize': fsize,
-#                          'fname': os.path.split(zfpath)[1]
-#                          })

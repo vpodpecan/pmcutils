@@ -20,8 +20,11 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '6pbfwqcz$(gzh@vqf47p48x(r4bft(eyz-0yn9ozdm8lhw(s(-'
+# NOTE: this is a sample key, you should make your own for your production server!
+SECRET_KEY = '2y-kxmu4-43(0zxr%_tr-wm7y6+85nk0k!s@xnr&@a=@du*)_d'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -78,17 +81,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pmcutils.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-
-#DATABASES = {
-    #'default': {
-        #'ENGINE': 'django.db.backends.sqlite3',
-        #'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    #}
-#}
-
-
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 
@@ -138,7 +130,6 @@ STATICFILES_FINDERS = (
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media_root')
 MEDIA_URL = '/media/'
-
 
 # COMPRESS_ENABLED = True
 

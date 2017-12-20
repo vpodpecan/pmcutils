@@ -1,0 +1,33 @@
+upstream django {
+    #server 127.0.0.1:8001; # for a web port socket
+    server unix:///srv/django-projects/pmcutils/pmcutils.sock;
+}
+
+# configuration of the server
+server {
+    # the port your site will be served on
+    listen      80;
+    # the domain name it will serve for
+    server_name localhost; # substitute your machine's IP address or FQDN
+    charset     utf-8;
+
+    # max upload size
+    client_max_body_size 75M;   # adjust to taste
+
+    location /static/ {
+      alias /srv/django-projects/pmcutils/static_root/;
+    }
+    location /media/ {
+      alias /srv/django-projects/pmcutils/media_root/;
+    }
+    location = /robots.txt {
+     alias /srv/django-projects/pmcutils/static_root/robots.txt;
+    }
+
+    # Finally, send all non-media requests to the Django server.
+    location / {
+        uwsgi_pass  django;
+        uwsgi_read_timeout = 216000;
+        include     /etc/nginx/uwsgi_params; # the uwsgi_params file of your nginx installation (or copy from https://raw.githubusercontent.com/nginx/nginx/master/conf/uwsgi_params)
+    }
+}
