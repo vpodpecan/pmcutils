@@ -99,7 +99,10 @@ class NCBI_search:
         if onlyOAC:
             qtparam += ' AND open access[filter]'
 
-        query = [('api_key', NCBI_API_KEY_PODPECAN), ('db', db), ('term', queryText + qtparam)]
+        if API_KEY is not None:
+            query = [('api_key', API_KEY), ('db', db), ('term', queryText + qtparam)]
+        else:
+            query = [('db', db), ('term', queryText + qtparam)]
 
         query.append(('retmax', self.maxdoc))
         query = '%s?%s' % (self.searchURL, urllib.parse.urlencode(query))
