@@ -317,7 +317,7 @@ def api(request):
         # this scheduler may not get the accurate qsizes but may still be better than random
         workloads = [p.workQueue.qsize() for p in proc_pool]
         minload = min(workloads)
-        if minload > 1000:
+        if minload > 20:
             sleep(1)
             continue
 
