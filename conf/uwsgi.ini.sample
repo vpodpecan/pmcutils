@@ -17,7 +17,7 @@ master          = true
 # maximum number of worker processes
 processes       = 10
 # the socket (use the full path to be safe
-socket          = /srv/django-projects/pmcutils/pmcutils.sock
+socket          = /tmp/pmcutils.sock
 # ... with appropriate permissions - may be needed
 chmod-socket    = 664
 # clear environment on exit

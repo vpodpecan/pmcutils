@@ -19,6 +19,9 @@ from oac_search import pubmed
 from oac_search.models import Archive, Article
 
 
+SENTINEL = 'STOP'
+
+
 def _error(message):
     return JsonResponse({'status': False, 'message': message})
 
@@ -125,7 +128,7 @@ class TextExtractor(Process):
         self.tags = tags
         self.ignoretags = ignoretags
         self.workQueue = Queue()
-        self.stopQueue = Queue()
+        # self.stopQueue = Queue()
         self.variables = Queue()
         self.nempty = 0
         self.nwritten = 0
@@ -184,31 +187,22 @@ class TextExtractor(Process):
         return unidecode.unidecode(text)
 
     def run(self):
-        while True:
-            if not self.workQueue.empty():
-                with open(self.tempfile, 'a') as fp:
-                    workload = self.workQueue.get()
-                    for pmcid, xml in workload:
-                        try:
-                            text = self.__extract_text(xml)
-                        except:
-                            text = ''
-                        if text == '':
-                            self.nempty += 1
-                            if self.nonempty:
-                                continue
-                        line = '{}\t{}\n'.format(pmcid, text)
-                        fp.write(line)
-                        self.nwritten += 1
-            else:
-                try:
-                    if self.stopQueue.get(block=False):
-                        break
-                    else:
-                        sleep(0.2)
-                except:
-                    pass
+        for workload in iter(self.workQueue.get, SENTINEL):
+            with open(self.tempfile, 'a') as fp:
+                for pmcid, xml in workload:
+                    try:
+                        text = self.__extract_text(xml)
+                    except:
+                        text = ''
+                    if text == '':
+                        self.nempty += 1
+                        if self.nonempty:
+                            continue
+                    line = '{}\t{}\n'.format(pmcid, text)
+                    fp.write(line)
+                    self.nwritten += 1
         self.variables.put({'nempty': self.nempty, 'nwritten': self.nwritten, 'fname': self.tempfile})
+
 # end
 
 
@@ -320,19 +314,23 @@ def api(request):
 
     indb = 0
     while len(pmcids) > 0:
+        # this scheduler may not get the accurate qsizes but may still be better than random
+        workloads = [p.workQueue.qsize() for p in proc_pool]
+        minload = min(workloads)
+        if minload > 1000:
+            sleep(1)
+            continue
+
+        free = workloads.index(minload)
         idsblock = pmcids[:blockSize]
         del pmcids[:blockSize]
         data = Article.objects.filter(pmcid__in=idsblock).values_list('pmcid', 'xml')
         indb += len(data)  # this also forces database access
-
-        # this scheduler may not get the accurate qsizes but is still trying
-        workloads = [p.workQueue.qsize() for p in proc_pool]
-        free = workloads.index(min(workloads))
         proc_pool[free].workQueue.put(data)
 
     # print('sending stop signal')
     for p in proc_pool:
-        p.stopQueue.put(True)
+        p.workQueue.put(SENTINEL)
 
     # print('joining')
     for p in proc_pool:

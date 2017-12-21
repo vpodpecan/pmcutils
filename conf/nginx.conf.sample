@@ -1,6 +1,6 @@
 upstream django {
     #server 127.0.0.1:8001; # for a web port socket
-    server unix:///srv/django-projects/pmcutils/pmcutils.sock;
+    server unix:///tmp/pmcutils.sock;
 }
 
 # configuration of the server
@@ -28,6 +28,7 @@ server {
     location / {
         uwsgi_pass  django;
         uwsgi_read_timeout = 216000;
+        uwsgi_send_timeout = 300;
         include     /etc/nginx/uwsgi_params; # the uwsgi_params file of your nginx installation (or copy from https://raw.githubusercontent.com/nginx/nginx/master/conf/uwsgi_params)
     }
 }
