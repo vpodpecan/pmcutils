@@ -307,7 +307,7 @@ def api(request):
 
     k = psutil.cpu_count()
     N = len(pmcids)
-    blockSize = 50
+    blockSize = min(50, N//k)
     proc_pool = [TextExtractor(tags, ignoretags, nonempty) for i in range(k)]
     for p in proc_pool:
         p.start()

@@ -80,6 +80,6 @@ The application fully utilizes system's resources by creating a pool of workers 
 
 1.  By default, the extraction will occupy all available CPU cores. You will need to reduce that if you want the machine to remain usable during lenghty extractions.
 
-2.  XML documents are submitted to the extraction processes in batches. The default batch size is 50 but you may optimize this number to suit your configuration.
+2.  XML documents are submitted to the extraction processes in batches. The default batch size is `min(50, N//cpu_count())` but you may optimize this number to suit your configuration.
 
 3.  The parent process which distributes the load to workers does not put more than 20 batches into each processing queue. You may want to increase or decrease this number to optimize for your memory configuration.
