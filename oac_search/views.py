@@ -352,7 +352,8 @@ def api(request):
     print('total time {:.1f}'.format(time()-start))
 
     zfpath = fpath + '.zip'
-    with zipfile.ZipFile(zfpath, mode='w', compression=zipfile.ZIP_BZIP2) as fz:
+    #with zipfile.ZipFile(zfpath, mode='w', compression=zipfile.ZIP_BZIP2) as fz:
+    with zipfile.ZipFile(zfpath, mode='w', compression=zipfile.ZIP_DEFLATED) as fz:
         fz.write(fpath, arcname=os.path.basename(fpath))
     os.remove(fpath)
 
