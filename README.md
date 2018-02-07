@@ -49,29 +49,29 @@ The installation procedure is very similar to the one I wrote for the [brapi-pyt
     nano local_settings.py
     ```
 
-3. Activate the new virtual environment and import archive files into the database. For example:
+4.  Activate the new virtual environment and import archive files into the database. For example:
     ```sh
     python manage.py import_archive articles.A-B.xml.tar.gz
     ```
     Now it's a good time to have a nap because the archives are big and import will take some time. To speed up the lenghty process you can import several archives in parallel. Just open another console and repeat the command on another archive.
 
-4.  If you have a NCBI API KEY you can put it in the file `oac_search/api_key.py`:
+5.  If you have a NCBI API KEY you can put it in the file `oac_search/api_key.py`:
     ```python
     API_KEY = 'your secret key'
     ```
 
-5.  If you do not need the production-ready installation you can stop here and launch the Django development server
+6.  If you do not need the production-ready installation you can stop here and launch the Django development server
     ```sh
     python manage.py runserver
     ```
     and open the application's main page: [http://127.0.0.1:8000/search](http://127.0.0.1:8000/search)
 
-6. For a production environment you will have to set up nginx and uwsgi. You can use config templates in the `conf` subdir. See the [brapi-python](https://github.com/vpodpecan/brapi-python) manual for details.
+7.  For a production environment you will have to set up nginx and uwsgi. You can use config templates in the `conf` subdir. See the [brapi-python](https://github.com/vpodpecan/brapi-python) manual for details.
 
 
 ### Updating the database
 
-NCBI daily updates the archives with new articles. The changes are not significant from day to day but the updates accumulate and finaly your database will become obsolete. In order to keep your database up-to-date the `import_archive` command can help. By default, it will not overwrite existing database records unless the `--overwrite` option is given. Therefore, in order to update it is enough to download new archives and repeat the import process (see step 5 above).
+NCBI daily updates the archives with new articles. The changes are not significant from day to day but the updates accumulate and finally your database will become obsolete. In order to keep your database up-to-date the `import_archive` command can help. By default, it will not overwrite existing database records unless the `--overwrite` option is given. Therefore, in order to update it is enough to download new archives and repeat the import process (see step 6 above).
 
 
 ### Fine tuning
