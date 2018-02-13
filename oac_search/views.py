@@ -6,6 +6,8 @@ from multiprocessing import Process, Queue
 import psutil
 from time import time, sleep
 from datetime import datetime
+# import shlex, subprocess
+from random import sample
 
 from bs4 import BeautifulSoup as bs
 from ratelimit.decorators import ratelimit
@@ -123,7 +125,7 @@ def _get_article_text_fast(xmltags, article):
 
 
 class TextExtractor(Process):
-    def __init__(self, tags, ignoretags, nonempty, group=None, target=None, name=None, args=(), kwargs={}):
+    def __init__(self, tags, ignoretags, nonempty, docclass, group=None, target=None, name=None, args=(), kwargs={}):
         super(TextExtractor, self).__init__(group, target, name, args, kwargs)
         self.tags = tags
         self.ignoretags = ignoretags
@@ -133,6 +135,7 @@ class TextExtractor(Process):
         self.nempty = 0
         self.nwritten = 0
         self.nonempty = nonempty
+        self.docclass = docclass
         fid, self.tempfile = tempfile.mkstemp()
     # end
 
@@ -198,7 +201,10 @@ class TextExtractor(Process):
                         self.nempty += 1
                         if self.nonempty:
                             continue
-                    line = '{}\t{}\n'.format(pmcid, text)
+                    if self.docclass:
+                        line = '{}\t!{} {}\n'.format(pmcid, self.docclass, text)
+                    else:
+                        line = '{}\t{}\n'.format(pmcid, text)
                     fp.write(line)
                     self.nwritten += 1
         self.variables.put({'nempty': self.nempty, 'nwritten': self.nwritten, 'fname': self.tempfile})
@@ -274,6 +280,8 @@ def api(request):
     tags = d.get('t', '')
     nonempty = d.get('t', '')
     ignoretags = d.get('it', '')
+    docclass = d.get('cl', '')
+    samplesize = d.get('ss', '')
 
     if not query or not pubtype or pubtype not in [x[0] for x in PUBTYPES]:
         return _error('Invalid request')
@@ -294,6 +302,9 @@ def api(request):
         return _error('Error while calling NCBI search. Try again later.')
     pmcids = ['PMC' + x for x in pmcids]
 
+    if samplesize:
+        pmcids = sample(pmcids, int(samplesize))
+
     if not pmcids:
         return JsonResponse({'status': True,
                              'pmchits': 0,
@@ -308,7 +319,7 @@ def api(request):
     k = psutil.cpu_count()
     N = len(pmcids)
     blockSize = min(50, N//k)
-    proc_pool = [TextExtractor(tags, ignoretags, nonempty) for i in range(k)]
+    proc_pool = [TextExtractor(tags, ignoretags, nonempty, docclass) for i in range(k)]
     for p in proc_pool:
         p.start()
 
@@ -348,6 +359,10 @@ def api(request):
             # print(variables)
             with open(variables['fname']) as pfp:
                 ofp.write(pfp.read())
+
+    # if samplesize:
+    #     # shuf -n 1000 -o outdfile infile
+
 
     print('total time {:.1f}'.format(time()-start))
 

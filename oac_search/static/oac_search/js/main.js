@@ -134,8 +134,11 @@ $(document).ready(function () {
         var ignoretags = $('#id_ignoretags').val().trim();
         var nonempty = $('#id_nonempty').is(':checked');
         var stype = $('input[name=pubtype]:checked', '#searchform').val().trim();
+        var docclass = $('#id_docclass').val().trim();
+        var samplesize = $('#id_samplesize').val().trim();
 
-        var posting = $.post('api', { 'q': query, 't': tags, 'it': ignoretags, 'st': stype, 'n': nonempty} );
+        var posting = $.post('api', { 'q': query, 't': tags, 'it': ignoretags, 'st': stype, 'n': nonempty,
+                                      'cl': docclass, 'ss': samplesize});
         posting.done(function( data ) {
             if(!data.status) {
                 bootbox.alert({
