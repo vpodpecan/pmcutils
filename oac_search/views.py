@@ -202,9 +202,9 @@ class TextExtractor(Process):
                         if self.nonempty:
                             continue
                     if self.docclass:
-                        line = '{}\t!{} {}\n'.format(pmcid, self.docclass, text)
+                        line = '{} !{} {}\n'.format(pmcid, self.docclass, text)
                     else:
-                        line = '{}\t{}\n'.format(pmcid, text)
+                        line = '{} {}\n'.format(pmcid, text)
                     fp.write(line)
                     self.nwritten += 1
         self.variables.put({'nempty': self.nempty, 'nwritten': self.nwritten, 'fname': self.tempfile})
