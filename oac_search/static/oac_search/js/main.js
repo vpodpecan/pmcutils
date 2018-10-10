@@ -164,6 +164,11 @@ $(document).ready(function () {
                     $('#corpuslink').text(data.fname);
                     $('#corpusinfo').text(sprintf(' (%s, %d documents)', data.fsize, parseInt(data.exported)));
 
+                    $('#xmlziplink').attr('href', '/media/' + data.xmlzip);
+                    $('#xmlziplink').text(data.xmlzip);
+                    $('#xmlzipinfo').text(sprintf(' (%s, %d XML files)', data.xmlfsize, parseInt(data.indb)));
+
+
                 }
                 $('#results').show(1000);
             }
