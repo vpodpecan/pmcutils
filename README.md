@@ -5,7 +5,7 @@ This project implements a Django web application which enables text extraction f
 
 This application works on original XML files and allows for the extraction and deletion of user-specified parts of the XML. For example, it is possible to extract only the body of the text while removing tables, images and links.
 
-The application works on a **local copy** of the PMC OAC document collection which you will have to download from the PMC FTP service. You can use all the `.xml.tar.gz` archive files from the PMC FTP archive: [ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/](ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/).
+The application works on a **local copy** of the PMC OAC document collection which you will have to download from the PMC FTP service. You can use all the `.xml.tar.gz` archive files from the [PMC FTP archive](ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/).
 
 To obtain the list of article IDs relevant to the query, the application calls the NCBI `esearch` service. Therefore, rate limiting is implemented to respect the limits imposed by NCBI. You are encouraged to obtain a NCBI API key which will increase this limit. Please read [NCBI Insights](https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/) for more information.
 
@@ -80,6 +80,6 @@ The application fully utilizes system's resources by creating a pool of workers 
 
 1.  By default, the extraction will occupy all available CPU cores. You will need to reduce that if you want the machine to remain usable during lenghty extractions.
 
-2.  XML documents are submitted to the extraction processes in batches. The default batch size is `min(50, N//cpu_count())` but you may optimize this number to suit your configuration.
+2.  XML documents are submitted to the extraction processes in batches. The default batch size is `max(min(50, N//cpu_count()), 1)` but you may optimize this number to suit your configuration.
 
 3.  The parent process which distributes the load to workers does not put more than 20 batches into each processing queue. You may want to increase or decrease this number to optimize for your memory configuration.
