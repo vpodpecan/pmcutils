@@ -323,6 +323,11 @@ def api(request):
     for p in proc_pool:
         p.start()
 
+    # archive with original xml data
+    base_fname = os.path.join(settings.MEDIA_ROOT, datetime.now().strftime('%a-%d-%b-%Y-%H-%M-%S-%f'))
+    xml_archive_fpath = base_fname + '.xml.zip'
+    xml_archive = zipfile.ZipFile(xml_archive_fpath, mode='w', compression=zipfile.ZIP_DEFLATED)
+
     indb = 0
     while len(pmcids) > 0:
         # this scheduler may not get the accurate qsizes but may still be better than random
@@ -339,6 +344,11 @@ def api(request):
         indb += len(data)  # this also forces database access
         proc_pool[free].workQueue.put(data)
 
+        # also dump xml files into the archive
+        for adata in data:
+            xml_archive.writestr('{}.xml'.format(adata[0]), adata[1])
+    xml_archive.close()
+
     # print('sending stop signal')
     for p in proc_pool:
         p.workQueue.put(SENTINEL)
@@ -350,7 +360,7 @@ def api(request):
 
     empty = 0
     nwritten = 0
-    fpath = os.path.join(settings.MEDIA_ROOT, datetime.now().strftime('%a-%d-%b-%Y-%H-%M-%S-%f') + '.lndoc')
+    fpath = base_fname + '.lndoc'
     with open(fpath, 'w') as ofp:
         for p in proc_pool:
             variables = p.variables.get()
@@ -363,7 +373,6 @@ def api(request):
     # if samplesize:
     #     # shuf -n 1000 -o outdfile infile
 
-
     print('total time {:.1f}'.format(time()-start))
 
     zfpath = fpath + '.zip'
@@ -374,11 +383,17 @@ def api(request):
 
     fsize = os.path.getsize(zfpath)
     fsize = '{:.0f} MB'.format(fsize/1e6) if fsize > 1e6 else '{:.0f} KB'.format(fsize/1e3)
+
+    xmlfsize = os.path.getsize(xml_archive_fpath)
+    xmlfsize = '{:.0f} MB'.format(xmlfsize/1e6) if xmlfsize > 1e6 else '{:.0f} KB'.format(xmlfsize/1e3)
+
     return JsonResponse({'status': True,
                          'pmchits': N,
                          'empty': empty,
                          'exported': nwritten,
                          'indb': indb,
                          'fsize': fsize,
-                         'fname': os.path.split(zfpath)[1]
+                         'fname': os.path.split(zfpath)[1],
+                         'xmlfsize': xmlfsize,
+                         'xmlzip': os.path.split(xml_archive_fpath)[1]
                          })
