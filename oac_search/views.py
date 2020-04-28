@@ -219,7 +219,7 @@ def index(request):
         archives.append(Archive.objects.filter(name=archive.name).order_by('-date')[0])
     arch = namedtuple('Archive', ['name', 'date'])
     context = {'form': SearchForm(initial={'pubtype': PUBTYPES[1][0]}),
-               'archives': [arch(name=x.name.replace('.xml.tar.gz', ''), date=x.date) for x in archives],
+               'archives': [arch(name=x.name, date=x.date) for x in archives],
                'narticles': Article.objects.count()}
     return render(request, 'oac_search/index.html', context)
 
