@@ -7,7 +7,7 @@ ipython==6.2.1
 beautifulsoup4==4.6.0
 lxml==4.1.1
 unidecode==0.4.21
-psutil==5.4.2
+psutil>=5.6.6
 django-compressor==2.2
 django_ratelimit==1.1.0
 html5lib==1.0.1
