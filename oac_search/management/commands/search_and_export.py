@@ -19,7 +19,7 @@ class Command(BaseCommand):
         # clean = options['clean']
         # full = options['full']
         queryfile = options['queryfile']
-        path = os.path.abspath(queryfile)
+        path = os.path.split(os.path.abspath(queryfile))[0]
         query = open(queryfile).read().replace('\n', ' ').strip()
 
         idfile = os.path.join(path, queryfile + '.pmcids')
