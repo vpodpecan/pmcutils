@@ -2,7 +2,10 @@ import os
 import logging
 import gzip
 
+from psycopg2 import sql
+
 from django.core.management.base import BaseCommand
+from django.db import connection
 
 from oac_search import models, pubmed
 
@@ -16,8 +19,6 @@ class Command(BaseCommand):
         parser.add_argument('queryfile', help="query file")
 
     def handle(self, *args, **options):
-        # clean = options['clean']
-        # full = options['full']
         queryfile = options['queryfile']
         path = os.path.split(os.path.abspath(queryfile))[0]
         query = open(queryfile).read().replace('\n', ' ').strip()
@@ -32,7 +33,21 @@ class Command(BaseCommand):
             ofp.write('\n'.join(pmcids))
 
         logging.info('Total PMC IDs: {}; present in DB: {}'.format(len(pmcids), models.Article.objects.filter(pmcid__in=pmcids).count()))
-        with gzip.open(fullfile, 'wt') as ofp:
-            for article in models.Article.objects.filter(pmcid__in=pmcids).iterator():
-                ofp.write('{}\t{}\n'.format(article.pmcid, article.text))
+        with gzip.open(fullfile, 'wt', encoding='utf8') as ofp:
+
+            with connection.cursor() as cursor:
+                cursor.execute('''DROP TABLE IF EXISTS _result_pmcids_''')
+                cursor.execute('''CREATE TABLE _result_pmcids_ (
+                                        id serial primary key,
+                                        pmcid varchar(20) unique not null)''')
+                connection.commit()
+                with open(idfile) as fp:
+                    cursor.copy_from(fp, '_result_pmcids_', columns=('pmcid',))
+                connection.commit()
+                cursor.execute('''SELECT oac_search_article.pmcid, oac_search_article.text
+                                  FROM oac_search_article
+                                  INNER JOIN _result_pmcids_ ON oac_search_article.pmcid = _result_pmcids_.pmcid''')
+                for pmcid, text in cursor:
+                    ofp.write('{}\t{}\n'.format(pmcid, text))
+                cursor.execute('''DROP TABLE IF EXISTS _result_pmcids_''')
         logging.info('Export complete.')
