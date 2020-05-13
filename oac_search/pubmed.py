@@ -7,11 +7,14 @@ import codecs
 import unidecode
 from bs4 import BeautifulSoup as bs
 import sys
+import logging
+
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 try:
     from .api_key import API_KEY
 except ImportError:
-    print('API_KEY variable not present in api_key.py')
+    logging.warning('API_KEY variable not present in api_key.py')
     API_KEY = None
 
 
@@ -106,7 +109,7 @@ class NCBI_search:
 
         query.append(('retmax', self.maxdoc))
         query = '%s?%s' % (self.searchURL, urllib.parse.urlencode(query))
-        print(query)
+        logging.info(query)
         ids = self.getIDs(query, maxHits=maxHits)
         return ids
 
