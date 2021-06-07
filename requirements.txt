@@ -15,3 +15,4 @@ slimit==0.8.1
 csscompressor==0.9.5
 brotlipy==0.7.0
 uwsgi==2.0.15
+undecorated==0.3.0
