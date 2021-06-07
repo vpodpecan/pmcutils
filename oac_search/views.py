@@ -283,7 +283,7 @@ def api(request):
     query = d.get('q', '')
     pubtype = d.get('st', '')
     tags = d.get('t', '')
-    nonempty = d.get('t', '')
+    nonempty = d.get('n', '')
     ignoretags = d.get('it', '')
     docclass = d.get('cl', '')
     samplesize = d.get('ss', '')
